@@ -105,6 +105,7 @@ gameOverSound = pygame.mixer.Sound('data\sounds\gameover.wav')
 pygame.mixer.music.load('data\sounds\maintheme.ogg')
 musicPlaying = True
 
+# tiles mario can walk on and hit
 class Platform():
     
     def __init__(self, x, y, pic, scaleX, scaleY, fallThrough, animated):
@@ -143,7 +144,7 @@ class Platform():
             coin.play()
         windowSurface.blit(self.hitImage, (self.x-cameraX, self.y-cameraY))
         self.hit = True
-        
+
 class Enemy():
     
     def __init__(self, x, y, pic, scaleX, scaleY, deadX, deadY, frames, aniSpeed):
@@ -175,7 +176,7 @@ class Enemy():
         else:
             windowSurface.blit(self.imageDEAD, (self.x-cameraX, self.y-cameraY+16))
         
-        
+# hardcoded level - next time i'll use a text file        
 level = """
 ......................c..........................................................................................................................................................................................................................
 ...........................................v..................................................v..................................c..............v...............................c................v..............................................
@@ -247,8 +248,10 @@ def buildLevel(level):
 
 buildLevel(level)
 
+# main game loop
 while True:
-        
+    
+    # spawn mario in level 1
     if livesScreen and pygame.time.get_ticks() - livesScreenTime >= 4000 and not menu:
         if not gameOver:
             livesScreen = False
@@ -270,7 +273,8 @@ while True:
             lives = 3
             coins = 0
             score = 0
-        
+    
+    # check for mario colliding with platforms
     if not menu:
         windowSurface.fill(SKYBLUE)
         
@@ -301,6 +305,7 @@ while True:
                             player.right = platform.rect(camera.x, camera.y).left - 5
                             collideRight += 1
         
+        # check for mario colliding with enemies
         for enemy in enemies:
             enemy.collide = 0
             enemy.current = True
@@ -367,7 +372,8 @@ while True:
                             pygame.mixer.music.stop()
                             deadTime = pygame.time.get_ticks()
             enemy.current = False
-                    
+    
+    #keep track of when mario is in the air
     if collideTop > 0:
         onGround = True
     else:
@@ -381,7 +387,8 @@ while True:
         velocityX = 0
     if collideRight > 0:
         velocityX = 0
-        
+    
+    # listen for keystrokes
     for event in pygame.event.get():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             pygame.quit()
@@ -463,7 +470,8 @@ while True:
         
     if player.x > 299:
         camera.x += velocityX
-        
+    
+    # if mario falls off the level, kill him
     if player.y > 480 and not dead:
         dead = True
         onGround = False
@@ -497,17 +505,20 @@ while True:
                 windowSurface.blit(marioF, player)
     else:
         windowSurface.blit(marioD, player)
-        
+     
+    # show lives screen between menu and level and after deaths 
     if dead and pygame.time.get_ticks() - deadTime > 5000 and not menu and not livesScreen:
         livesScreen = True
         livesScreenTime = pygame.time.get_ticks()
-   
+    
+    # play level speed up music when almost out of time
     if levelTimer <= 100 and not lowTime:
         lowTime = True
         pygame.mixer.music.load('fastTheme.mp3')
         pygame.mixer.music.play(-1, 0.0)
         speedUp.play()
     
+    # if timer reaches 0 kill mario
     if levelTimer == 0 and not dead:
         dead = True
         onGround = False
@@ -520,12 +531,14 @@ while True:
         marioDie.play()
         pygame.mixer.music.stop()
         deadTime = pygame.time.get_ticks()
-                
+    
+    # keep track of level time
     if (pygame.time.get_ticks() - levelTime > 400 or startLevel == True) and levelTimer > 0 and not livesScreen and not menu:
         levelTime = pygame.time.get_ticks()
         levelTimer -= 1
         startLevel = False
-     
+    
+    # draw lives screen
     if livesScreen and not menu:
         windowSurface.fill(BLACK)
         if lives > 0:
@@ -540,7 +553,8 @@ while True:
             gameOverText = MARIOFONT.render("GAME OVER", True, WHITE)
             windowSurface.blit(gameOverText, (240, 170))
             gameOver = True
-     
+    
+    # draw opening menu screen and scores
     if menu:       
         windowSurface.blit(menuImg, (0, 0))
     else:
